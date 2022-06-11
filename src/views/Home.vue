@@ -48,7 +48,14 @@
       </ul>
     </div>
     <!-- 空状态切换 -->
-    <a-empty description="暂无搜索数据" v-show="isEmpty" style="padding: 10px 0; height: 68vh" />
+    <a-empty
+      description="暂无搜索数据"
+      :image-style="{
+        height: '160px',
+      }"
+      v-show="isEmpty"
+      style="padding: 10px 0; height: 68vh; font-size: 16px"
+    />
   </div>
 </template>
 
