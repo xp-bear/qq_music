@@ -3,8 +3,8 @@
     <!-- 顶部搜索框 -->
     <div class="nav">
       <!-- 搜索框 -->
-      <div class="search_input">
-        <input type="text" placeholder="搜索音乐、MV、歌单、用户" v-model="keyword" @keyup.enter="searchValue" @focus="onFocus" @blur="onBlur" />
+      <div class="search_input" :class="{ border: isShadow }">
+        <input type="text" placeholder="搜索音乐、MV、歌单、用户" v-model="keyword" @keyup.enter="searchValue" ref="search_input" @focus="onFocus" @blur="onBlur" />
         <div class="search_icon" @click="searchValue"><i></i></div>
       </div>
       <div class="hot_key">
@@ -28,7 +28,7 @@
           <div>
             <a-tooltip>
               <template slot="title"> 播放歌曲 </template>
-              <a-icon type="play-circle" @mouseenter="toPlay(item.songmid)" />
+              <a-icon type="play-circle" @click="toPlay(item.songmid)" />
             </a-tooltip>
             <a-tooltip>
               <template slot="title"> 下载歌曲 </template>
@@ -48,14 +48,7 @@
       </ul>
     </div>
     <!-- 空状态切换 -->
-    <a-empty
-      description="暂无搜索数据"
-      :image-style="{
-        height: '160px',
-      }"
-      v-show="isEmpty"
-      style="padding: 10px 0; height: 68vh; font-size: 16px"
-    />
+    <a-empty description="暂无搜索数据" v-show="isEmpty" style="padding: 10px 0; height: 68vh" />
   </div>
 </template>
 
@@ -75,6 +68,7 @@ export default {
     //   .then((res) => {
     //     console.log(res.data);
     //   });
+    this.$refs.search_input.focus();
   },
   data() {
     return {
@@ -82,16 +76,19 @@ export default {
       keyword: "", //用户搜索关键字
       songsList: [], //歌曲搜索列表
       isEmpty: true, //空状态是否显示
+      songUrl: {}, //歌曲链接
+      isShadow: false, //搜索框阴影切换的class状态
     };
   },
   watch: {
-    // 监听最新的值
+    // 监听输入框最新的值
     keyword(newVal, oldVal) {
       this.keyword = newVal.trim();
       if (newVal == "") {
         this.songsList = [];
       }
     },
+    // 监听有没有歌曲,判断是不是空状态
     songsList(newVal, oldVal) {
       if (this.songsList.length > 0) {
         this.isEmpty = false;
@@ -101,36 +98,41 @@ export default {
     },
   },
   methods: {
-    // 获取搜索关键字请求
+    // 获取热门搜索关键字发起请求
     hot_search() {
       this.$axios.get("/search/hot").then((res) => {
         this.hot_key = res.data.data.slice(0, 5); //返回30个,截取5个
         this.keyword = this.hot_key[0]["k"];
       });
     },
-    //获取音乐列表请求
-    getSongList() {
+
+    // 根据关键字发起请求音乐列表
+    searchValue(e) {
       this.$axios.get(`/search?key=${this.keyword}`).then((res) => {
         this.songsList = res["data"]["data"]["list"];
       });
     },
-
-    // 函数-输入框搜索关键字
-    searchValue(e) {
-      this.getSongList();
-    },
+    // 输入框聚焦
     onFocus() {
-      console.log(11);
+      this.isShadow = true;
+      // console.log(11);
     },
-
+    // 输入框失去焦点
     onBlur() {
-      console.log(22);
+      this.isShadow = false;
+      // console.log(22);
     },
     //获取播放链接
     toPlay(id) {
-      console.log(id);
+      // console.log(id); //音乐的songmig
       this.$axios.get(`/song/url?id=${id}`).then((res) => {
-        console.log(res.data);
+        this.songUrl = res.data;
+        if (this.songUrl.result == 100) {
+          console.log("音乐链接: ", this.songUrl.data);
+        } else {
+          this.$message.warning("当前歌曲暂无资源!", 1);
+          return;
+        }
       });
     },
   },
@@ -190,8 +192,10 @@ export default {
           width: 16px;
           height: 16px;
           margin-left: 20px;
-          background-color: rebeccapurple;
           background: url("../assets/icon_sprite.630b3e60.png") no-repeat 0 -40px;
+          &:hover {
+            background: url("../assets/icon_sprite.630b3e60.png") no-repeat 0 -60px;
+          }
         }
       }
     }
@@ -253,10 +257,15 @@ export default {
         justify-content: space-between;
         align-items: center;
         span {
+          width: 400px;
           color: #31c27c;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         div {
           display: flex;
+          width: 120px;
           align-items: center;
           i {
             width: 24px;
@@ -272,6 +281,15 @@ export default {
         }
       }
     }
+  }
+  .ant-empty {
+    width: 1200px;
+    margin: 0 auto;
+  }
+  .border {
+    margin-left: -6px;
+    box-shadow: 0 0 6px rgba(77, 190, 181, 0.8);
+    transition: all 0.3s;
   }
 }
 </style>
