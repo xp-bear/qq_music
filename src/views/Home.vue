@@ -31,12 +31,13 @@
               <a-icon type="play-circle" @click="toPlay(item.songmid)" />
             </a-tooltip>
             <a-tooltip>
-              <template slot="title"> 下载歌曲 </template>
-              <a-icon type="vertical-align-bottom" />
+              <template slot="title"> 播放MV </template>
+              <!-- <i :style="imageUrl"></i> -->
+              <a-icon type="youtube" />
             </a-tooltip>
             <a-tooltip>
-              <template slot="title"> 添加到我的歌单 </template>
-              <a-icon type="plus-square" />
+              <template slot="title"> 下载歌曲 </template>
+              <a-icon type="vertical-align-bottom" />
             </a-tooltip>
           </div>
         </li>
@@ -78,6 +79,11 @@ export default {
       isEmpty: true, //空状态是否显示
       songUrl: {}, //歌曲链接
       isShadow: false, //搜索框阴影切换的class状态
+      imageUrl: {
+        backgroundImage: "url(" + require("../assets/MV.png") + ")",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+      },
     };
   },
   watch: {
