@@ -12,48 +12,49 @@
       </div>
     </div>
 
-    <!-- 搜索主体 -->
-    <div class="content">
-      <ul class="title one">
-        <li></li>
-        <li>歌曲</li>
-        <li>歌手</li>
-        <li>专辑</li>
-        <li>时长</li>
-      </ul>
-      <ul class="title songs" v-for="(item, index) in songsList" :key="item.songmid">
-        <li>{{ index + 1 }}</li>
-        <li>
-          <span>{{ item.songname }}</span>
-          <div>
-            <a-tooltip>
-              <template slot="title"> 播放歌曲 </template>
-              <a-icon type="play-circle" @click="toPlay(item.songmid)" />
-            </a-tooltip>
-            <a-tooltip>
-              <template slot="title"> 播放MV </template>
-              <!-- <i :style="imageUrl"></i> -->
-              <a-icon type="youtube" />
-            </a-tooltip>
-            <a-tooltip>
-              <template slot="title"> 下载歌曲 </template>
-              <a-icon type="vertical-align-bottom" />
-            </a-tooltip>
-          </div>
-        </li>
-        <li>
-          <span v-for="sign in item.singer" :key="sign.id">{{ item.singer.length > 1 ? sign.name + " / " : sign.name }}</span>
-        </li>
-        <li>{{ item.albumname }}</li>
-        <li>{{ item.interval | getMinute }}</li>
-      </ul>
-    </div>
-    <!-- 空状态切换 -->
-    <a-empty description="暂无搜索数据" v-show="isEmpty" style="padding: 10px 0; height: 68vh" />
+    <a-spin tip="疯狂加载中..." size="large" :spinning="isLoading">
+      <!-- 搜索主体 -->
+      <div class="content">
+        <ul class="title one">
+          <li>/</li>
+          <li>歌曲</li>
+          <li>歌手</li>
+          <li>专辑</li>
+          <li>时长</li>
+        </ul>
+        <ul class="title songs" v-for="(item, index) in songsList" :key="item.id">
+          <li>{{ index + 1 }}</li>
+          <li>
+            <span>{{ item.sign_name }}</span>
+            <div>
+              <a-tooltip>
+                <template slot="title"> 播放歌曲 </template>
+                <a-icon type="play-circle" @click="toPlay(item.id)" />
+              </a-tooltip>
+              <a-tooltip>
+                <template slot="title"> 下载歌曲 </template>
+                <a-icon type="download" />
+              </a-tooltip>
+              <a-tooltip>
+                <template slot="title"> 添加到播放列表 </template>
+                <a-icon type="plus-square" />
+              </a-tooltip>
+            </div>
+          </li>
+          <li>{{ item.sign_signer }}</li>
+          <li><img :src="item.data.cover" alt="" style="height: 100%" /> {{ item.sign_signer }}的专辑</li>
+          <li>{{ item.duration }}</li>
+        </ul>
+      </div>
+      <!-- 空状态切换 -->
+
+      <a-empty description="暂无搜索数据" v-show="isEmpty" style="padding: 10px 0; height: 68vh" />
+    </a-spin>
   </div>
 </template>
 
 <script>
+import { mapMutations } from "vuex";
 export default {
   name: "Home",
   created() {
@@ -61,29 +62,21 @@ export default {
     this.hot_search();
   },
   mounted() {
-    // 设置cookie信息
-    // this.$axios
-    //   .post(`/user/setCookie`, {
-    //     data: "ts_uid=735691528; pgv_pvid=192372140; eas_sid=K1b6U5b1C312O2w8t2y2P4r9E7; RK=fl/Z822QZ5; ptcz=9a706184f39add4b9767fb6b575b7997c89f8ed9c2b7b968a4ddee8beb91ab0a; fqm_pvqid=a1ef3e00-c897-486b-b537-a6a835873c23; ptui_loginuin=1693889638; tmeLoginType=2; euin=oKCqoicFNKCiNn**; ts_refer=ADTAGmyqq; fqm_sessionid=b83ba967-5c0d-4be2-af7b-e3eb2eace832; pgv_info=ssid=s6774386820; ts_last=y.qq.com/; _qpsvr_localtk=0.770934420309467; login_type=1; psrf_qqrefresh_token=EA27219DF698D25F5983F3FB5829FBE8; qqmusic_key=Q_H_L_5rd_kOcTzFRMkbzyxcgixk9Xp-jtLDbtbVTc20SWVA1qoab4N061dRA; wxopenid=; psrf_access_token_expiresAt=1662603315; psrf_qqunionid=E264BA66D62E7209D87E029DAD376ADD; psrf_qqaccess_token=39FA746E53427C02F1AE53E7BA90D4F7; wxrefresh_token=; qm_keyst=Q_H_L_5rd_kOcTzFRMkbzyxcgixk9Xp-jtLDbtbVTc20SWVA1qoab4N061dRA; psrf_musickey_createtime=1654827315; psrf_qqopenid=3F7A6D6A4E62B93E966110DECE6D8455; wxunionid=; qm_keyst=Q_H_L_5rd_kOcTzFRMkbzyxcgixk9Xp-jtLDbtbVTc20SWVA1qoab4N061dRA; uin=1693889638",
-    //   })
-    //   .then((res) => {
-    //     console.log(res.data);
-    //   });
     this.$refs.search_input.focus();
   },
   data() {
     return {
-      hot_key: [], //热门搜索关键字
+      hot_key: [
+        { n: 1, k: "周杰伦" },
+        { n: 2, k: "薛之谦" },
+        { n: 3, k: "许嵩" },
+      ], //热门搜索关键字
       keyword: "", //用户搜索关键字
       songsList: [], //歌曲搜索列表
       isEmpty: true, //空状态是否显示
       songUrl: {}, //歌曲链接
       isShadow: false, //搜索框阴影切换的class状态
-      imageUrl: {
-        backgroundImage: "url(" + require("../assets/MV.png") + ")",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-      },
+      isLoading: false, //搜索歌曲加载的状态
     };
   },
   watch: {
@@ -104,19 +97,72 @@ export default {
     },
   },
   methods: {
+    ...mapMutations(["m_setItems"]),
     // 获取热门搜索关键字发起请求
     hot_search() {
-      this.$axios.get("/search/hot").then((res) => {
-        this.hot_key = res.data.data.slice(0, 5); //返回30个,截取5个
-        this.keyword = this.hot_key[0]["k"];
-      });
+      // this.$axios.get("/search/hot").then((res) => {
+      //   this.hot_key = res.data.data.slice(0, 5); //返回30个,截取5个
+      //   this.keyword = this.hot_key[0]["k"];
+      // });
     },
 
     // 根据关键字发起请求音乐列表
-    searchValue(e) {
-      this.$axios.get(`/search?key=${this.keyword}`).then((res) => {
-        this.songsList = res["data"]["data"]["list"];
+    async searchValue(e) {
+      this.isLoading = true; //开始加载
+      // 初始请求获取行数据
+      const response = await this.$axios.get(`?msg=${this.keyword}&type=json&br=2`);
+      let lines = response.data.split("\n");
+      lines.pop(); // 删除最后一个元素
+
+      // 创建保存结果的数组
+      let resultPromises = [];
+
+      // 遍历每一行数据并解析
+      lines.forEach((line, index) => {
+        // 每一行按照 "--" 分割成两部分
+        let parts = line.split(" -- ");
+
+        // 提取歌曲名（去掉前面的编号和点）
+        let signName = parts[0].split(".").slice(1).join(".").trim();
+        // 歌手名
+        let signer = parts[1]?.trim();
+
+        // 构造对象并加入到结果数组中
+        resultPromises.push(
+          (async () => {
+            let obj = {};
+            // 请求歌曲数据
+            const result = await this.$axios.get(`?msg=${this.keyword}&type=json&br=2&n=${index + 1}`);
+            obj.data = result.data.data;
+            obj.id = index + 1;
+            obj.sign_name = signName;
+            obj.sign_signer = signer;
+            return obj;
+          })()
+        );
       });
+
+      // 等待所有请求完成
+      const resultArray = await Promise.all(
+        resultPromises.map(async (promise, index) => {
+          let obj = await promise;
+          obj.duration = await this.fetchAudioDuration(obj.data.music_url);
+          if (obj.duration == "00:00") {
+            return {};
+          }
+          return obj;
+        })
+      );
+      // 使用filter和Object.keys去除空对象
+      this.songsList = resultArray.filter((obj) => Object.keys(obj).length > 0);
+      // 保存数据到vuex中
+      this.m_setItems(this.songsList);
+
+      // 打印数据vuex中的
+      // console.log(this.$store.state.x_songsList);
+
+      // 结束加载
+      this.isLoading = false; //结束加载
     },
     // 输入框聚焦
     onFocus() {
@@ -130,34 +176,54 @@ export default {
     },
     //获取播放链接
     toPlay(id) {
-      // console.log(id); //音乐的songmig
-      this.$axios.get(`/song/url?id=${id}`).then((res) => {
-        this.songUrl = res.data;
-        if (this.songUrl.result == 100) {
-          console.log("音乐链接: ", this.songUrl.data);
-        } else {
-          this.$message.warning("当前歌曲暂无资源!", 1);
-          return;
-        }
+      this.songUrl = this.songsList[id - 1].data;
+      if (this.songUrl.music_url) {
+        console.log("音乐链接: ", this.songUrl.music_url);
+      } else {
+        this.$message.warning("当前歌曲暂无资源!", 1);
+        return;
+      }
+    },
+
+    // 根据提供的音乐URL获取音频的总时长
+    getAudioDuration(url) {
+      return new Promise((resolve, reject) => {
+        const audio = new Audio(url);
+        audio.preload = "metadata"; // 只预加载元数据
+
+        audio.addEventListener("loadedmetadata", function () {
+          resolve(audio.duration); // 音频加载完成后返回时长
+        });
+
+        audio.addEventListener("error", function () {
+          reject(new Error("无法加载音频文件")); // 如果加载失败则抛出错误
+        });
       });
     },
-  },
-  filters: {
-    // 把秒钟转分钟
-    getMinute(value) {
-      let minute = Math.floor(value / 60);
-      let second = value % 60;
 
-      if (minute < 10) {
-        minute = "0" + minute;
-      }
-      if (second < 10) {
-        second = "0" + second;
-      }
+    // 调佣函数格式化音乐时长显示
+    async fetchAudioDuration(url) {
+      try {
+        let value = parseInt(await this.getAudioDuration(url));
 
-      return minute + ":" + second;
+        let minute = Math.floor(value / 60);
+        let second = value % 60;
+
+        if (minute < 10) {
+          minute = "0" + minute;
+        }
+        if (second < 10) {
+          second = "0" + second;
+        }
+        let res = minute + ":" + second;
+
+        return res;
+      } catch (error) {
+        return "00:00";
+      }
     },
   },
+  filters: {},
 };
 </script>
 
