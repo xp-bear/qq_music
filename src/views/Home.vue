@@ -55,6 +55,7 @@
 
 <script>
 import { mapMutations } from "vuex";
+
 export default {
   name: "Home",
   created() {
@@ -229,7 +230,8 @@ export default {
 
 <style lang="less" scoped>
 #Home {
-  // background-color: #fafafa;
+  position: relative;
+  padding-bottom: 85px;
   .nav {
     // width: 1200px;
     height: 250px;
