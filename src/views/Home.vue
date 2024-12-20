@@ -29,7 +29,7 @@
             <div>
               <a-tooltip>
                 <template slot="title"> 播放歌曲 </template>
-                <a-icon type="play-circle" @click="toPlay(item.id)" />
+                <a-icon type="play-circle" @click="toPlay(item.uid, item.id)" />
               </a-tooltip>
               <a-tooltip>
                 <template slot="title"> 下载歌曲 </template>
@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
+import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "Home",
@@ -97,8 +97,11 @@ export default {
       }
     },
   },
+  computed: {
+    ...mapState(["x_songsList", "x_playListIndex"]),
+  },
   methods: {
-    ...mapMutations(["m_setItems"]),
+    ...mapMutations(["m_setItems", "m_setPlayListIndex", "m_setIsPlaying"]),
     // 获取热门搜索关键字发起请求
     hot_search() {
       // this.$axios.get("/search/hot").then((res) => {
@@ -109,81 +112,85 @@ export default {
 
     // 根据关键字发起请求音乐列表
     async searchValue(e) {
-      this.isLoading = true; //开始加载
-      // 初始请求获取行数据
-      const response = await this.$axios.get(`?msg=${this.keyword}&type=json&br=2`);
-      let lines = response.data.split("\n");
-      lines.pop(); // 删除最后一个元素
+      try {
+        this.isLoading = true; //开始加载
+        // 初始请求获取行数据
+        const response = await this.$axios.get(`?msg=${this.keyword}&type=json&br=2`);
+        let lines = response.data.split("\n");
+        lines.pop(); // 删除最后一个元素
 
-      // 创建保存结果的数组
-      let resultPromises = [];
+        // 创建保存结果的数组
+        let resultPromises = [];
 
-      // 遍历每一行数据并解析
-      lines.forEach((line, index) => {
-        // 每一行按照 "--" 分割成两部分
-        let parts = line.split(" -- ");
+        // 遍历每一行数据并解析
+        lines.forEach((line, index) => {
+          // 每一行按照 "--" 分割成两部分
+          let parts = line.split(" -- ");
 
-        // 提取歌曲名（去掉前面的编号和点）
-        let signName = parts[0].split(".").slice(1).join(".").trim();
-        // 歌手名
-        let signer = parts[1]?.trim();
+          // 提取歌曲名（去掉前面的编号和点）
+          let signName = parts[0].split(".").slice(1).join(".").trim();
+          // 歌手名
+          let signer = parts[1]?.trim();
 
-        // 构造对象并加入到结果数组中
-        resultPromises.push(
-          (async () => {
-            let obj = {};
-            // 请求歌曲数据
-            const result = await this.$axios.get(`?msg=${this.keyword}&type=json&br=2&n=${index + 1}`);
-            obj.data = result.data.data;
-            obj.id = index + 1;
-            obj.sign_name = signName;
-            obj.sign_signer = signer;
+          // 构造对象并加入到结果数组中
+          resultPromises.push(
+            (async () => {
+              let obj = {};
+              // 请求歌曲数据
+              const result = await this.$axios.get(`?msg=${this.keyword}&type=json&br=2&n=${index + 1}`);
+              obj.data = result.data.data;
+              obj.id = index + 1;
+              obj.sign_name = signName;
+              obj.sign_signer = signer;
+              obj.uid = result.data.data.link;
+              return obj;
+            })()
+          );
+        });
+
+        // 等待所有请求完成
+        const resultArray = await Promise.all(
+          resultPromises.map(async (promise, index) => {
+            let obj = await promise;
+            obj.duration = await this.fetchAudioDuration(obj.data.music_url);
+            if (obj.duration == "00:00") {
+              return {};
+            }
             return obj;
-          })()
+          })
         );
-      });
+        // 使用filter和Object.keys去除空对象
+        this.songsList = resultArray.filter((obj) => Object.keys(obj).length > 0);
+        // 保存数据到vuex中
+        // this.m_setItems(this.songsList);
 
-      // 等待所有请求完成
-      const resultArray = await Promise.all(
-        resultPromises.map(async (promise, index) => {
-          let obj = await promise;
-          obj.duration = await this.fetchAudioDuration(obj.data.music_url);
-          if (obj.duration == "00:00") {
-            return {};
-          }
-          return obj;
-        })
-      );
-      // 使用filter和Object.keys去除空对象
-      this.songsList = resultArray.filter((obj) => Object.keys(obj).length > 0);
-      // 保存数据到vuex中
-      this.m_setItems(this.songsList);
+        // console.log("歌曲列表: ", this.songsList);
 
-      // 打印数据vuex中的
-      // console.log(this.$store.state.x_songsList);
-
-      // 结束加载
-      this.isLoading = false; //结束加载
+        this.isLoading = false; //结束加载
+      } catch (error) {
+        // 报错处理
+        this.isLoading = false; //结束加载
+        this.$message.error("加载失败,请稍后再试!", 1);
+      }
     },
     // 输入框聚焦
     onFocus() {
       this.isShadow = true;
-      // console.log(11);
     },
     // 输入框失去焦点
     onBlur() {
       this.isShadow = false;
-      // console.log(22);
+    },
+    // 根据uid获取播放对象
+    getUidByPlayObj(list, uid) {
+      return list.find((item) => item.uid === uid);
     },
     //获取播放链接
-    toPlay(id) {
-      this.songUrl = this.songsList[id - 1].data;
-      if (this.songUrl.music_url) {
-        console.log("音乐链接: ", this.songUrl.music_url);
-      } else {
-        this.$message.warning("当前歌曲暂无资源!", 1);
-        return;
-      }
+    toPlay(uid, id) {
+      // 保存索引到vuex中
+      this.m_setItems(this.songsList[id - 1]);
+      this.m_setPlayListIndex(uid);
+      this.m_setIsPlaying(true);
     },
 
     // 根据提供的音乐URL获取音频的总时长
@@ -234,6 +241,7 @@ export default {
   padding-bottom: 85px;
   .nav {
     // width: 1200px;
+    width: 100%;
     height: 250px;
     background: url("../assets/bg_search.png") no-repeat;
     background-size: cover;

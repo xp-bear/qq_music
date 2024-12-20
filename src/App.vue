@@ -28,6 +28,5 @@ export default {
 
 <style lang="less">
 #app {
-  position: relative;
 }
 </style>
