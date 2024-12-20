@@ -1,8 +1,8 @@
-// module.exports = {
+module.exports = {
 //   devServer: {
 //     proxy: {
 //       "/api": {
-//         target: "http://150.158.21.251:3300",
+//         target: "http://freetyst.nf.migu.cn",
 //         changeOrigin: true,
 //         pathRewrite: {
 //           "^/api": "",
@@ -10,4 +10,4 @@
 //       },
 //     },
 //   },
-// };
+};

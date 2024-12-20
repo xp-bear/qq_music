@@ -4,8 +4,8 @@
     <div class="nav">
       <!-- 搜索框 -->
       <div class="search_input" :class="{ border: isShadow }">
-        <input type="text" placeholder="搜索音乐、MV、歌单、用户" v-model="keyword" @keyup.enter="searchValue" ref="search_input" @focus="onFocus" @blur="onBlur" />
-        <div class="search_icon" @click="searchValue"><i></i></div>
+        <input type="text" placeholder="搜索音乐、MV、歌单、用户" v-model="keyword" @keyup.enter="debouncedSearchValue" ref="search_input" @focus="onFocus" @blur="onBlur" />
+        <div class="search_icon" @click="debouncedSearchValue"><i></i></div>
       </div>
       <div class="hot_key">
         热门搜索:<span v-for="item in hot_key" :key="item.n">{{ item.k }}</span>
@@ -33,11 +33,11 @@
               </a-tooltip>
               <a-tooltip>
                 <template slot="title"> 下载歌曲 </template>
-                <a-icon type="download" />
+                <a-icon type="download" @click="downloadMusic(item)" />
               </a-tooltip>
               <a-tooltip>
                 <template slot="title"> 添加到播放列表 </template>
-                <a-icon type="plus-square" />
+                <a-icon type="plus-square" @click="addPlayList(item.uid, item.id)" />
               </a-tooltip>
             </div>
           </li>
@@ -54,13 +54,17 @@
 </template>
 
 <script>
-import { mapState, mapMutations } from "vuex";
+import { debounce } from "lodash";
+import { mapState, mapMutations, mapActions } from "vuex";
 
 export default {
   name: "Home",
   created() {
     // 请求热门搜索关键字
     this.hot_search();
+  },
+  created() {
+    this.debouncedSearchValue = debounce(this.searchValue, 1000); // 1秒防抖
   },
   mounted() {
     this.$refs.search_input.focus();
@@ -112,6 +116,7 @@ export default {
 
     // 根据关键字发起请求音乐列表
     async searchValue(e) {
+      console.log("开始请求数据");
       try {
         this.isLoading = true; //开始加载
         // 初始请求获取行数据
@@ -192,7 +197,23 @@ export default {
       this.m_setPlayListIndex(uid);
       this.m_setIsPlaying(true);
     },
-
+    // 下载音乐
+    downloadMusic(item) {
+      // 创建一个隐藏的链接元素
+      const link = document.createElement("a");
+      link.target = "_blank";
+      link.href = item.data.music_url; // 歌曲的下载链接
+      link.download = item.singer + "-" + item.title + ".mp3"; // 下载的文件名
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    // 添加到播放列表
+    addPlayList(uid, id) {
+      // 保存索引到vuex中
+      this.m_setItems(this.songsList[id - 1]);
+      this.$message.success("已添加到播放列表", 1);
+    },
     // 根据提供的音乐URL获取音频的总时长
     getAudioDuration(url) {
       return new Promise((resolve, reject) => {

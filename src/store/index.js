@@ -6,7 +6,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     x_songsList: [], //搜索的歌曲数组对象
-    x_playListIndex: -1, //当前播放的歌曲uid
+    x_playListIndex: "", //当前播放的歌曲uid
     x_isPlaying: false, //是否正在播放
   },
   mutations: {
@@ -26,6 +26,7 @@ export default new Vuex.Store({
           uniqueSongs.push(song);
         }
       });
+
       // 利用集合去重
       state.x_songsList = uniqueSongs;
       // 保存数据到本地
@@ -43,6 +44,21 @@ export default new Vuex.Store({
       if (localStorage.getItem("l_isPlaying")) {
         state.x_isPlaying = false; //默认不播放
       }
+    },
+    // 清空数据
+    m_clearSongsList(state) {
+      state.x_songsList = [];
+      state.x_playListIndex = "-1";
+      state.x_isPlaying = false;
+      // 清空本地存储
+      localStorage.clear();
+    },
+    // vuex数据保存到本地
+    m_setSongsListLocal(state) {
+      // 保存数据到本地
+      localStorage.setItem("l_songsList", JSON.stringify(state.x_songsList));
+      localStorage.setItem("l_playListIndex", state.x_playListIndex);
+      localStorage.setItem("l_isPlaying", state.x_isPlaying);
     },
     // 添加当前播放的歌曲索引
     m_setPlayListIndex(state, index) {

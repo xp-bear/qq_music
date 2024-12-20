@@ -25,3 +25,18 @@
   border-radius: 10px; */
   background: transparent;
 }
+
+/* 播放列表的滚动条 */
+.play_list_bar::-webkit-scrollbar {
+  /*滚动条整体样式*/
+  width: 5px; /*高宽分别对应横竖滚动条的尺寸*/
+  height: 1px;
+}
+.play_list_bar::-webkit-scrollbar-thumb {
+  /*滚动条里面小方块*/
+  border-radius: 10px;
+  background-color: #414141;
+}
+.play_list_bar::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}

@@ -1,5 +1,5 @@
 <template>
-  <div id="C_Play">
+  <div class="C_Play" ref="play_detail">
     <div class="box" :class="[{ animationYup: isMove == 1 }, { animationYdown: isMove == 2 }]">
       <!-- 右上角关闭角标 -->
       <span class="tag" @click="close_play" :class="[{ isLock: isMove == 2 }]"></span>
@@ -8,9 +8,9 @@
       <div class="content">
         <!-- 按钮图标 -->
         <div class="btns">
-          <div></div>
+          <div @click="previous_song"></div>
           <div @click="paly_music" :class="x_isPlaying ? 'isPlayingClass' : 'isPauseClass'"></div>
-          <div></div>
+          <div @click="next_song"></div>
         </div>
         <!-- 播放信息 -->
         <div class="play_info">
@@ -49,9 +49,42 @@
             <div class="play_state_info" ref="play_state_info"></div>
           </div>
           <!-- 播放列表 -->
-          <div class="paly_list" @click="paly_list" ref="play_detail">
-            <span>{{ x_songsList.length }}</span>
-            <div class="play_detail" v-show="playDetailState" @click.stop>1212</div>
+          <div class="paly_list" @click="paly_list">
+            <span class="paly_list_1">{{ x_songsList.length }}</span>
+            <div class="play_detail" v-show="playDetailState" @click.stop>
+              <div class="play_left">
+                <div class="play_left_title">
+                  <h4>播放列表({{ x_songsList.length }})</h4>
+                  <div class="play_delete" @click="clear_play_list">
+                    <span></span>
+                    <span>清除</span>
+                  </div>
+                </div>
+                <!-- 播放列表主体区域 -->
+                <div class="play_list_content play_list_bar">
+                  <div class="play_list_item" :class="item.data.link == x_playListIndex ? 'play_list_bg' : ''" v-for="(item, index) in x_songsList" :key="index" @click="changePlayInfo(item.uid)">
+                    <div class="play_list_item_info">
+                      <div class="py_title">
+                        <div class="py_tit_info">
+                          <span :style="item.data.link == x_playListIndex ? 'background: url(' + isCurPlayingImg + ') no-repeat -182px 0' : ''"></span>
+                          <span class="py_tit_info_2">{{ item.data.title }}</span>
+                        </div>
+                        <!-- 操作按钮 -->
+                        <div class="py_btns">
+                          <span class="py_btns_1" title="下载" @click="download_play_info($event, item)" style="margin-right: 20px"> </span>
+                          <span class="py_btns_1" title="删除" @click="delete_play_info($event, item.uid)"></span>
+                        </div>
+                      </div>
+                      <div class="py_name">
+                        <span class="py_name_1">{{ item.data.singer }}</span>
+                        <span class="py_name_2">{{ item.duration }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="play_right">右</div>
+            </div>
           </div>
         </div>
       </div>
@@ -81,6 +114,8 @@ export default {
       playVolume: 50, //音量
 
       playDetailState: false, //播放列表详情
+
+      isCurPlayingImg: require("../assets/playlist.png"), //当前播放音乐图片
     };
   },
   mounted() {
@@ -132,7 +167,7 @@ export default {
     // 播放音乐
     d_play_music() {
       if (this.x_playListIndex != "-1") {
-        return this.x_songsList.find((item) => item.uid === this.x_playListIndex).data.music_url;
+        return this.x_songsList.find((item) => item.uid === this.x_playListIndex)?.data.music_url;
       } else {
         return "";
       }
@@ -153,8 +188,58 @@ export default {
     },
   },
   methods: {
-    ...mapMutations(["m_setIsPlaying", "m_setSongsList", "m_setIsPlayVolume"]),
+    ...mapMutations(["m_clearSongsList", "m_setIsPlaying", "m_setSongsList", "m_setIsPlayVolume", "m_setPlayListIndex", "m_setSongsListLocal"]),
+    // 清除播放列表
+    clear_play_list() {
+      this.m_clearSongsList(); //清除播放列表
+    },
 
+    // 下载音乐
+    download_play_info(event, item) {
+      event.stopPropagation(); //阻止事件冒泡
+      // 创建一个隐藏的链接元素
+      const link = document.createElement("a");
+      link.target = "_blank";
+      link.href = item.data.music_url; // 歌曲的下载链接
+      link.download = item.singer + "-" + item.title + ".mp3"; // 下载的文件名
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    // 删除播放列表
+    delete_play_info(event, uid) {
+      event.stopPropagation(); //阻止事件冒泡
+      const index = this.x_songsList.findIndex((item) => item.uid == uid);
+
+      // 如果找到了对应的对象，则使用splice方法删除它
+      if (index !== -1) {
+        // 删除选中歌曲
+        if (uid == this.x_playListIndex) {
+          this.x_songsList.splice(index, 1); //删除当前歌曲
+          // 如果删除的最后一首歌曲,则赋值前一首歌曲
+          if (index == this.x_songsList.length) {
+            this.m_setPlayListIndex(this.x_songsList[index - 1].uid);
+          } else {
+            this.m_setPlayListIndex(this.x_songsList[index].uid); //删除后播放下一首
+          }
+        } else {
+          this.x_songsList.splice(index, 1); //删除当前歌曲
+        }
+      }
+
+      // 保存到本地
+      this.m_setSongsListLocal();
+    },
+    // 点击播放列表
+    changePlayInfo(uid) {
+      this.m_setPlayListIndex(uid);
+      this.m_setIsPlaying(true);
+      if (this.x_isPlaying) {
+        this.$refs.audioElement.play();
+      } else {
+        this.$refs.audioElement.pause();
+      }
+    },
     // 点击播放列表
     paly_list() {
       this.playDetailState = !this.playDetailState;
@@ -182,6 +267,29 @@ export default {
       if (this.currentTime >= this.durationTime) {
         this.m_setIsPlaying(false);
       }
+      // 判断是否为顺序播放,且播放完毕,自动切换到下一首
+      if (this.isPlayState == 1 && this.currentTime >= this.durationTime) {
+        // 找到当前歌曲的索引
+        // 使用findIndex方法找到具有指定uid的对象的索引
+        let curPlayIndex = this.x_songsList.findIndex((item) => item.uid === this.x_playListIndex);
+        // 判断到了最后一首歌曲
+        if (curPlayIndex === this.x_songsList.length - 1) {
+          return this.$message.info("当前已经是最后一首歌曲", 1);
+        }
+        this.m_setPlayListIndex(this.x_songsList[curPlayIndex + 1].uid);
+      } else if (this.isPlayState == 3 && this.currentTime >= this.durationTime) {
+        // 随机播放
+        let randomIndex = Math.floor(Math.random() * this.x_songsList.length);
+        this.m_setPlayListIndex(this.x_songsList[randomIndex].uid);
+        this.m_setIsPlaying(true);
+      }
+
+      // 切换播放状态
+      if (this.x_isPlaying) {
+        this.$refs.audioElement.play();
+      } else {
+        this.$refs.audioElement.pause();
+      }
     },
     // 点击播放状态 2s后隐藏
     change_play_state() {
@@ -207,6 +315,30 @@ export default {
     //点击关闭按钮
     close_play() {
       this.isMove = 2; //点击关闭按钮
+    },
+    // 上一首歌曲
+    previous_song() {
+      // 找到当前歌曲的索引
+      // 使用findIndex方法找到具有指定uid的对象的索引
+      let curPlayIndex = this.x_songsList.findIndex((item) => item.uid === this.x_playListIndex);
+      // 判断到了最后一首歌曲
+      if (curPlayIndex === 0) {
+        return this.$message.info("当前已经是第一首歌曲", 1);
+      }
+      this.m_setPlayListIndex(this.x_songsList[curPlayIndex - 1].uid);
+      this.m_setIsPlaying(true);
+    },
+    // 下一首歌曲
+    next_song() {
+      // 找到当前歌曲的索引
+      // 使用findIndex方法找到具有指定uid的对象的索引
+      let curPlayIndex = this.x_songsList.findIndex((item) => item.uid === this.x_playListIndex);
+      // 判断到了最后一首歌曲
+      if (curPlayIndex === this.x_songsList.length - 1) {
+        return this.$message.info("当前已经是最后一首歌曲", 1);
+      }
+      this.m_setPlayListIndex(this.x_songsList[curPlayIndex + 1].uid);
+      this.m_setIsPlaying(true);
     },
     // 播放音乐
     paly_music() {
@@ -237,6 +369,9 @@ export default {
 };
 </script>
 <style lang="less" scoped>
+.play_list_bg {
+  background-color: #0d0d0d;
+}
 .animationYup {
   animation: fadeInUp 0.5s 0s ease both;
 }
@@ -270,7 +405,7 @@ export default {
   background: url("../assets/playbar.png") no-repeat -42px -205px !important; //播放按钮图标
 }
 
-#C_Play {
+.C_Play {
   position: relative;
   .box {
     position: fixed;
@@ -462,7 +597,7 @@ export default {
         &:hover {
           background: url("../assets/playbar.png") no-repeat -45px -101px;
         }
-        span {
+        .paly_list_1 {
           color: #5d5d5d;
           font-size: 12px;
           margin-right: 20px;
@@ -476,7 +611,154 @@ export default {
           border-top-left-radius: 5px;
           border-top-right-radius: 5px;
           font-size: 12px;
-          color: #e2e2e2;
+          display: flex;
+          .play_left {
+            flex: 1;
+            height: 100%;
+            background-color: #161616;
+            .play_left_title {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 40px;
+              padding: 0 20px;
+              background: url("../assets/playlist_bg.png") no-repeat;
+              h4 {
+                font-size: 14px;
+                color: #e2e2e2;
+                font-weight: 700;
+                margin: 0;
+              }
+              .play_delete {
+                display: flex;
+                align-items: center;
+                &:hover {
+                  span {
+                    &:nth-child(1) {
+                      background: url("../assets/playlist.png") no-repeat -51px -17px;
+                    }
+                    &:nth-child(2) {
+                      text-decoration: underline;
+                      color: #e2e2e2;
+                    }
+                  }
+                }
+                span {
+                  margin: 0;
+                  cursor: pointer;
+                  &:nth-child(1) {
+                    display: inline-block;
+                    width: 18px;
+                    height: 20px;
+                    background: url("../assets/playlist.png") no-repeat -51px 3px;
+                  }
+                  &:nth-child(2) {
+                    color: #cccccc;
+                  }
+                }
+              }
+            }
+            .play_list_content {
+              height: 260px;
+              overflow: auto;
+              .play_list_item {
+                padding: 0 20px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                color: #cccccc;
+                &:hover {
+                  color: #ffffff;
+                  .py_name_1,
+                  .py_name_2 {
+                    color: #ffffff !important;
+                  }
+                  background-color: #0d0d0d;
+                }
+                .play_list_item_info {
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  .py_title {
+                    width: 350px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    .py_tit_info {
+                      display: flex;
+                      align-items: center;
+                      span {
+                        margin: 0;
+                        &:nth-child(1) {
+                          width: 15px;
+                          height: 13px;
+                          margin-right: 5px;
+                        }
+                        .py_tit_info_2 {
+                          width: 220px;
+                          color: #bcbcbc;
+                          white-space: nowrap;
+                          text-overflow: ellipsis;
+                          overflow: hidden;
+                          word-break: break-all;
+                        }
+                      }
+                    }
+                    .py_btns {
+                      display: flex;
+                      .py_btns_1 {
+                        width: 15px;
+                        height: 15px;
+                        background-color: #fff;
+                        &:nth-child(1) {
+                          background: url("../assets/playlist.png") no-repeat -57px -50px;
+                          &:hover {
+                            background: url("../assets/playlist.png") no-repeat -80px -50px;
+                          }
+                        }
+                        &:nth-child(2) {
+                          background: url("../assets/playlist.png") no-repeat -51px 0;
+                          &:hover {
+                            background: url("../assets/playlist.png") no-repeat -51px -20px;
+                          }
+                        }
+                      }
+                    }
+                  }
+                  .py_name {
+                    display: flex;
+                    justify-content: space-between;
+                    width: 125px;
+                    .py_name_1 {
+                      width: 80px;
+                      white-space: nowrap;
+                      text-overflow: ellipsis;
+                      overflow: hidden;
+                      word-break: break-all;
+                      color: #9b9b9b;
+                    }
+                    .py_name_2 {
+                      width: 30%;
+                      text-align: right;
+                      color: #5e5e5e;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          .play_right {
+            width: 430px;
+            height: 100%;
+            background-color: #1c1c1c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            &:hover {
+              background-color: #2b2b2b;
+            }
+          }
         }
       }
     }
