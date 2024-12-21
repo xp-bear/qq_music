@@ -27,18 +27,9 @@
           <li>
             <span>{{ item.sign_name }}</span>
             <div>
-              <a-tooltip>
-                <template slot="title"> 播放歌曲 </template>
-                <a-icon type="play-circle" @click="toPlay(item.uid, item.id)" />
-              </a-tooltip>
-              <a-tooltip>
-                <template slot="title"> 下载歌曲 </template>
-                <a-icon type="download" @click="downloadMusic(item)" />
-              </a-tooltip>
-              <a-tooltip>
-                <template slot="title"> 添加到播放列表 </template>
-                <a-icon type="plus-square" @click="addPlayList(item.uid, item.id)" />
-              </a-tooltip>
+              <a-icon title="播放歌曲" type="play-circle" @click="toPlay(item.uid, item.id)" />
+              <a-icon title="下载歌曲" type="download" @click="downloadMusic(item)" />
+              <a-icon title="添加到播放列表" type="plus-square" @click="addPlayList(item.uid, item.id)" />
             </div>
           </li>
           <li>{{ item.sign_signer }}</li>
@@ -64,7 +55,7 @@ export default {
     this.hot_search();
   },
   created() {
-    this.debouncedSearchValue = debounce(this.searchValue, 1000); // 1秒防抖
+    this.debouncedSearchValue = debounce(this.searchValue, 500); // 500ns防抖
   },
   mounted() {
     this.$refs.search_input.focus();
@@ -157,10 +148,12 @@ export default {
         const resultArray = await Promise.all(
           resultPromises.map(async (promise, index) => {
             let obj = await promise;
+
             obj.duration = await this.fetchAudioDuration(obj.data.music_url);
             if (obj.duration == "00:00") {
               return {};
             }
+
             return obj;
           })
         );

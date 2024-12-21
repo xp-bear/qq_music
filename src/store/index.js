@@ -8,8 +8,10 @@ export default new Vuex.Store({
     x_songsList: [], //搜索的歌曲数组对象
     x_playListIndex: "", //当前播放的歌曲uid
     x_isPlaying: false, //是否正在播放
+
   },
   mutations: {
+
     // 添加歌曲到播放数组
     m_setItems(state, newItems) {
       // 根据uid 进行去重

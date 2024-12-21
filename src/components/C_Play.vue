@@ -19,7 +19,7 @@
           </div>
           <div class="play_name">
             <div class="play_name_info">
-              <span>{{ d_play_music_info ? d_play_music_info.data.title : "" }}</span>
+              <span @click="paly_list">{{ d_play_music_info ? d_play_music_info.data.title : "" }}</span>
               <span>{{ d_play_music_info ? d_play_music_info.data.singer : "" }}</span>
             </div>
             <!-- 进度条 -->
@@ -83,7 +83,23 @@
                   </div>
                 </div>
               </div>
-              <div class="play_right">右</div>
+              <div class="play_right">
+                <!-- 歌曲标题 -->
+                <div class="play_info_title">
+                  <div class="play_info_title_1">
+                    {{ d_play_music_info ? d_play_music_info.sign_name : "" }}
+                    <span class="play_info_title_2" @click="toClosePlayList"> </span>
+                  </div>
+                </div>
+                <!-- 歌词区域 -->
+                <div class="play_info_lyric play_list_bar" ref="lyricsContainer">
+                  <div class="play_info_lyric_content">
+                    <div v-for="(line, index) in parsedLyrics" :key="index" :class="{ highlighted: currentLineIndex == index }" ref="lyricLines">
+                      {{ line.text }}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -116,6 +132,9 @@ export default {
       playDetailState: false, //播放列表详情
 
       isCurPlayingImg: require("../assets/playlist.png"), //当前播放音乐图片
+
+      lyrics: "", //歌词
+      lrc_url: "", //歌词地址
     };
   },
   mounted() {
@@ -144,9 +163,40 @@ export default {
       // 监听音量变化
       this.$refs.audioElement.volume = newVolume / 100;
     },
+    // 监听歌词地址变化
+    lrc_url(newUrl) {
+      if (newUrl) {
+        this.fetchLyrics();
+      }
+    },
   },
   computed: {
-    ...mapState(["x_playListIndex", "x_songsList", "x_isPlaying"]),
+    ...mapState(["x_isLysicString", "x_playListIndex", "x_songsList", "x_isPlaying"]),
+
+    // 解析歌词
+    parsedLyrics() {
+      // 假设歌词格式为 [时间] 歌词
+      return this.lyrics.split("\n").map((line) => {
+        const match = line.match(/\[(\d+):(\d+)\.(\d+)\](.*)/);
+        if (match) {
+          const minutes = parseInt(match[1], 10);
+          const seconds = parseInt(match[2], 10);
+          const milliseconds = parseInt(match[3], 10);
+          const time = minutes * 60 + seconds + milliseconds / 1000;
+          return { time, text: match[4] };
+        }
+        return { time: 9999, text: line };
+      });
+    },
+    // 当前播放的歌词行索引
+    currentLineIndex() {
+      for (let i = this.parsedLyrics.length - 1; i >= 0; i--) {
+        if (this.currentTime >= this.parsedLyrics[i].time) {
+          return i;
+        }
+      }
+      return 0;
+    },
 
     // 播放状态切换
     d_change_state() {
@@ -169,7 +219,7 @@ export default {
       if (this.x_playListIndex != "-1") {
         return this.x_songsList.find((item) => item.uid === this.x_playListIndex)?.data.music_url;
       } else {
-        return "";
+        return "no data"; //如果没有数据则返回空字符串
       }
     },
     // 播放音乐的信息
@@ -177,7 +227,7 @@ export default {
       if (this.x_playListIndex != "-1") {
         return this.x_songsList.find((item) => item.uid === this.x_playListIndex);
       } else {
-        return false;
+        return false; //如果没有数据 反回false
       }
     },
     // 格式化当前时间
@@ -189,6 +239,12 @@ export default {
   },
   methods: {
     ...mapMutations(["m_clearSongsList", "m_setIsPlaying", "m_setSongsList", "m_setIsPlayVolume", "m_setPlayListIndex", "m_setSongsListLocal"]),
+
+    // 关闭播放列表
+    toClosePlayList() {
+      this.playDetailState = false;
+    },
+
     // 清除播放列表
     clear_play_list() {
       this.m_clearSongsList(); //清除播放列表
@@ -209,8 +265,10 @@ export default {
     // 删除播放列表
     delete_play_info(event, uid) {
       event.stopPropagation(); //阻止事件冒泡
-      const index = this.x_songsList.findIndex((item) => item.uid == uid);
+      this.lyrics = ""; //清空歌词
+      this.parsedLyrics = []; //清空歌词
 
+      const index = this.x_songsList.findIndex((item) => item.uid == uid);
       // 如果找到了对应的对象，则使用splice方法删除它
       if (index !== -1) {
         // 删除选中歌曲
@@ -230,19 +288,34 @@ export default {
       // 保存到本地
       this.m_setSongsListLocal();
     },
+    // 请求歌词
+    async fetchLyrics() {
+      try {
+        const response = await this.$axios.get(this.lrc_url);
+        this.lyrics = response.data.data.lrc;
+      } catch (error) {
+        console.error("Error fetching lyrics:", error);
+      }
+    },
+
     // 点击播放列表
-    changePlayInfo(uid) {
+    async changePlayInfo(uid) {
       this.m_setPlayListIndex(uid);
       this.m_setIsPlaying(true);
-      if (this.x_isPlaying) {
-        this.$refs.audioElement.play();
-      } else {
-        this.$refs.audioElement.pause();
-      }
+      // 请求歌词
+      let sign_name = this.x_songsList.find((item) => item.uid === uid).sign_name;
+      sign_name = sign_name.split("(")[0];
+      this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
     },
     // 点击播放列表
     paly_list() {
       this.playDetailState = !this.playDetailState;
+      if (this.playDetailState) {
+        // 请求歌词
+        let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
+        sign_name = sign_name.split("(")[0];
+        this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+      }
     },
     // 全局点击事件
     handleClickOutside(event) {
@@ -259,10 +332,29 @@ export default {
     //     this.paly_music();
     //   }
     // },
+
+    // 滚动到当前行
+    scrollToCurrentLine() {
+      const container = this.$refs.lyricsContainer;
+      const lines = this.$refs.lyricLines;
+
+      const currentLine = lines[this.currentLineIndex];
+
+      if (currentLine) {
+        const containerHeight = container.clientHeight;
+        const lineHeight = currentLine.clientHeight;
+        const scrollTop = currentLine.offsetTop - containerHeight / 2 + lineHeight / 2;
+        container.scrollTop = scrollTop;
+      }
+    },
+
     // 更新当前播放时间
     updateCurrentTime() {
       this.durationTime = this.$refs.audioElement.duration;
       this.currentTime = this.$refs.audioElement.currentTime;
+      // 滚动到当前行
+      this.scrollToCurrentLine();
+
       this.$refs.progressing.style.width = `${(this.currentTime / this.durationTime) * 100}%`;
       if (this.currentTime >= this.durationTime) {
         this.m_setIsPlaying(false);
@@ -277,6 +369,7 @@ export default {
           return this.$message.info("当前已经是最后一首歌曲", 1);
         }
         this.m_setPlayListIndex(this.x_songsList[curPlayIndex + 1].uid);
+        this.m_setIsPlaying(true);
       } else if (this.isPlayState == 3 && this.currentTime >= this.durationTime) {
         // 随机播放
         let randomIndex = Math.floor(Math.random() * this.x_songsList.length);
@@ -327,6 +420,11 @@ export default {
       }
       this.m_setPlayListIndex(this.x_songsList[curPlayIndex - 1].uid);
       this.m_setIsPlaying(true);
+
+      // 请求歌词
+      let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
+      sign_name = sign_name.split("(")[0];
+      this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
     },
     // 下一首歌曲
     next_song() {
@@ -339,6 +437,11 @@ export default {
       }
       this.m_setPlayListIndex(this.x_songsList[curPlayIndex + 1].uid);
       this.m_setIsPlaying(true);
+
+      // 请求歌词
+      let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
+      sign_name = sign_name.split("(")[0];
+      this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
     },
     // 播放音乐
     paly_music() {
@@ -369,6 +472,12 @@ export default {
 };
 </script>
 <style lang="less" scoped>
+.highlighted {
+  color: red;
+  font-weight: bold;
+  font-size: 14px;
+  transition: all 0.3s;
+}
 .play_list_bg {
   background-color: #0d0d0d;
 }
@@ -750,13 +859,50 @@ export default {
           .play_right {
             width: 430px;
             height: 100%;
-            background-color: #1c1c1c;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: #191919;
             cursor: pointer;
-            &:hover {
-              background-color: #2b2b2b;
+            .play_info_title {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              width: 100%;
+              height: 40px;
+              padding: 0 20px;
+              background: url("../assets/playlist_bg.png") no-repeat;
+              .play_info_title_1 {
+                position: relative;
+                font-size: 14px;
+                color: #fff;
+                font-size: 14px;
+                margin: 0;
+                flex: 1;
+                text-align: center;
+              }
+              .play_info_title_2 {
+                position: absolute;
+                right: 0;
+                width: 18px;
+                height: 20px;
+                background: url("../assets/playlist.png") no-repeat -200px 5px;
+                &:hover {
+                  background: url("../assets/playlist.png") no-repeat -200px -25px;
+                }
+              }
+            }
+            .play_info_lyric {
+              height: 260px;
+              overflow: auto;
+              color: #8c8c8c;
+              font-size: 12px;
+              transition: all 0.3s;
+              .play_info_lyric_content {
+                height: 260px;
+                height: 32px;
+                line-height: 32px;
+                padding: 0 20px;
+                text-align: center;
+                transition: all 0.3s;
+              }
             }
           }
         }
