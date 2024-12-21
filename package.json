@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "SET NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "SET NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service build"
   },
   "dependencies": {
     "animate.css": "^4.1.1",

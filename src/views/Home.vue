@@ -67,7 +67,7 @@ export default {
         { n: 2, k: "薛之谦" },
         { n: 3, k: "许嵩" },
       ], //热门搜索关键字
-      keyword: "", //用户搜索关键字
+      keyword: "周杰伦", //用户搜索关键字
       songsList: [], //歌曲搜索列表
       isEmpty: true, //空状态是否显示
       songUrl: {}, //歌曲链接
