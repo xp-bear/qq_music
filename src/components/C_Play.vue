@@ -296,7 +296,7 @@ export default {
         const response = await this.$axios.get(this.lrc_url);
         this.lyrics = response.data.data.lrc;
       } catch (error) {
-        console.error("Error fetching lyrics:", error);
+        this.lyrics = "[00:00.00] 暂无歌词";
       }
     },
 

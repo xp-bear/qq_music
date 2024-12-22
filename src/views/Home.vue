@@ -67,7 +67,7 @@ export default {
         { n: 2, k: "薛之谦" },
         { n: 3, k: "许嵩" },
       ], //热门搜索关键字
-      keyword: "周杰伦", //用户搜索关键字
+      keyword: "", //用户搜索关键字
       songsList: [], //歌曲搜索列表
       isEmpty: true, //空状态是否显示
       songUrl: {}, //歌曲链接
@@ -107,7 +107,6 @@ export default {
 
     // 根据关键字发起请求音乐列表
     async searchValue(e) {
-      console.log("开始请求数据");
       try {
         this.isLoading = true; //开始加载
         // 初始请求获取行数据
