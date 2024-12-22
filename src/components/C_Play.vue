@@ -9,7 +9,7 @@
         <!-- 按钮图标 -->
         <div class="btns">
           <div @click="previous_song"></div>
-          <div @click="paly_music" :class="x_isPlaying ? 'isPlayingClass' : 'isPauseClass'"></div>
+          <div title="ctrl+空格 播放" @click="paly_music" :class="x_isPlaying ? 'isPlayingClass' : 'isPauseClass'"></div>
           <div @click="next_song"></div>
         </div>
         <!-- 播放信息 -->
@@ -19,7 +19,7 @@
           </div>
           <div class="play_name">
             <div class="play_name_info">
-              <span @click="paly_list">{{ d_play_music_info ? d_play_music_info.data.title : "" }}</span>
+              <span @click="paly_list" style="user-select: none">{{ d_play_music_info ? d_play_music_info.data.title : "" }}</span>
               <span>{{ d_play_music_info ? d_play_music_info.data.singer : "" }}</span>
             </div>
             <!-- 进度条 -->
@@ -45,10 +45,10 @@
             </div>
           </div>
           <!-- 播放音乐的状态切换 -->
-          <div class="play_state" @click="change_play_state" :style="d_change_state">
+          <div class="play_state" @click="change_play_state" :class="d_change_state" :title="isPlayState == 1 ? '循环' : isPlayState == 2 ? '单曲循环' : '随机'">
             <div class="play_state_info" ref="play_state_info"></div>
           </div>
-          <!-- 播放列表 -->
+          <!-- 播放列表 右边 -->
           <div class="paly_list" @click="paly_list">
             <span class="paly_list_1">{{ x_songsList.length }}</span>
             <div class="play_detail" v-show="playDetailState" @click.stop>
@@ -94,9 +94,7 @@
                 <!-- 歌词区域 -->
                 <div class="play_info_lyric play_list_bar" ref="lyricsContainer">
                   <div class="play_info_lyric_content">
-                    <div v-for="(line, index) in parsedLyrics" :key="index" :class="{ highlighted: currentLineIndex == index }" ref="lyricLines">
-                      {{ line.text }}
-                    </div>
+                    <div v-for="(line, index) in parsedLyrics" :key="index" :class="{ highlighted: currentLineIndex == index }" ref="lyricLines">{{ line.text }}</div>
                   </div>
                 </div>
               </div>
@@ -107,7 +105,7 @@
     </div>
     <div class="unfold" @mouseover="hover_unfold"></div>
     <!-- 播放音乐 -->
-    <audio :src="d_play_music" autoplay :loop="isPlayState == 2 ? true : false" ref="audioElement"></audio>
+    <audio :src="d_play_music" :loop="isPlayState == 2 ? true : false" ref="audioElement"></audio>
   </div>
 </template>
 
@@ -141,19 +139,25 @@ export default {
     // 每秒更新一次当前播放时间
     this.intervalId = setInterval(this.updateCurrentTime, 1000);
     // 监听空格键
-    // window.addEventListener("keydown", this.handleSpaceKey);
+    window.addEventListener("keyup", this.handleSpaceKey);
 
     // 获取本地数据保存到vux中
     this.m_setSongsList();
 
     // 全局点击事件
     document.addEventListener("click", this.handleClickOutside);
+
+    //默认暂停播放
+    this.m_setIsPlaying(false);
+
+    // 初始的默认音量应该是50。
+    this.$refs.audioElement.volume = this.playVolume / 100;
   },
   beforeDestroy() {
     // 清除定时器
     clearInterval(this.intervalId);
     // 移除事件监听
-    // window.removeEventListener("keydown", this.handleSpaceKey);
+    window.removeEventListener("keyup", this.handleSpaceKey);
 
     // 移除全局点击事件
     document.removeEventListener("click", this.handleClickOutside);
@@ -182,7 +186,7 @@ export default {
           const minutes = parseInt(match[1], 10);
           const seconds = parseInt(match[2], 10);
           const milliseconds = parseInt(match[3], 10);
-          const time = minutes * 60 + seconds + milliseconds / 1000;
+          const time = minutes * 60 + seconds + milliseconds / 1000; // 偏移一下歌词显示，因为不是当前音乐的接口。
           return { time, text: match[4] };
         }
         return { time: 9999, text: line };
@@ -201,17 +205,11 @@ export default {
     // 播放状态切换
     d_change_state() {
       if (this.isPlayState == 1) {
-        return {
-          background: `url(${this.playbarImage}) no-repeat -33px -344px`,
-        };
+        return "d_change_state_1";
       } else if (this.isPlayState == 2) {
-        return {
-          background: `url(${this.playbarImage}) no-repeat -93px -344px`,
-        };
+        return "d_change_state_2";
       } else if (this.isPlayState == 3) {
-        return {
-          background: `url(${this.playbarImage}) no-repeat -93px -249px`,
-        };
+        return "d_change_state_3";
       }
     },
     // 播放音乐
@@ -219,7 +217,7 @@ export default {
       if (this.x_playListIndex != "-1") {
         return this.x_songsList.find((item) => item.uid === this.x_playListIndex)?.data.music_url;
       } else {
-        return "no data"; //如果没有数据则返回空字符串
+        return ""; //如果没有数据则返回空字符串
       }
     },
     // 播放音乐的信息
@@ -248,6 +246,7 @@ export default {
     // 清除播放列表
     clear_play_list() {
       this.m_clearSongsList(); //清除播放列表
+      this.lyrics = "[00:00.00] "; //初始化歌词
     },
 
     // 下载音乐
@@ -265,8 +264,6 @@ export default {
     // 删除播放列表
     delete_play_info(event, uid) {
       event.stopPropagation(); //阻止事件冒泡
-      this.lyrics = ""; //清空歌词
-      this.parsedLyrics = []; //清空歌词
 
       const index = this.x_songsList.findIndex((item) => item.uid == uid);
       // 如果找到了对应的对象，则使用splice方法删除它
@@ -280,6 +277,11 @@ export default {
           } else {
             this.m_setPlayListIndex(this.x_songsList[index].uid); //删除后播放下一首
           }
+
+          // 请求歌词
+          let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
+          sign_name = sign_name.split("(")[0];
+          this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
         } else {
           this.x_songsList.splice(index, 1); //删除当前歌曲
         }
@@ -307,10 +309,15 @@ export default {
       sign_name = sign_name.split("(")[0];
       this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
     },
-    // 点击播放列表
+    // 点击播放列表 右下角的播放列表。
     paly_list() {
       this.playDetailState = !this.playDetailState;
       if (this.playDetailState) {
+        // 判断一下能不能正常找到。如果找不到，就不请求了
+        if (this.x_playListIndex == "-1" || localStorage.getItem("l_playListIndex") == null) {
+          console.log("没有找到当前播放的歌曲");
+          return;
+        }
         // 请求歌词
         let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
         sign_name = sign_name.split("(")[0];
@@ -327,11 +334,20 @@ export default {
       }
     },
     // 监听空格播放状态
-    // handleSpaceKey(event) {
-    //   if (event.code === "Space") {
-    //     this.paly_music();
-    //   }
-    // },
+    handleSpaceKey(event) {
+      // 播放音乐 ctrl + 空格
+      if (event.code === "Space" && event.ctrlKey) {
+        this.paly_music();
+      }
+      // 上一首歌曲 ctrl + 方向左
+      if (event.code === "ArrowLeft" && event.ctrlKey) {
+        this.previous_song();
+      }
+      // 下一首歌曲 ctrl + 方向右
+      if (event.code === "ArrowRight" && event.ctrlKey) {
+        this.next_song();
+      }
+    },
 
     // 滚动到当前行
     scrollToCurrentLine() {
@@ -344,7 +360,15 @@ export default {
         const containerHeight = container.clientHeight;
         const lineHeight = currentLine.clientHeight;
         const scrollTop = currentLine.offsetTop - containerHeight / 2 + lineHeight / 2;
+
+        // 添加平滑滚动效果
+        container.style.scrollBehavior = "smooth";
         container.scrollTop = scrollTop;
+
+        // 移除平滑滚动效果，以便下次立即生效
+        setTimeout(() => {
+          container.style.scrollBehavior = "auto";
+        }, 500); // 动画持续时间
       }
     },
 
@@ -445,6 +469,10 @@ export default {
     },
     // 播放音乐
     paly_music() {
+      // 判断有没有歌曲
+      if (this.x_playListIndex == "-1" || localStorage.getItem("l_playListIndex") == null) {
+        return this.$message.info("当前没有歌曲", 1);
+      }
       this.m_setIsPlaying(!this.x_isPlaying);
       if (this.x_isPlaying) {
         this.$refs.audioElement.play();
@@ -461,6 +489,10 @@ export default {
       // 在这里处理点击事件，例如更新播放进度
       this.$refs.progressing.style.width = `${percentage}%`;
 
+      // 判断有没有歌曲
+      if (this.x_playListIndex == "-1" || localStorage.getItem("l_playListIndex") == null) {
+        return this.$message.info("当前没有歌曲", 1);
+      }
       // 切换播放状态
       this.m_setIsPlaying(true);
 
@@ -472,6 +504,24 @@ export default {
 };
 </script>
 <style lang="less" scoped>
+.d_change_state_1 {
+  background: url(../assets/playbar.png) no-repeat -6px -344px !important;
+  &:hover {
+    background: url(../assets/playbar.png) no-repeat -36px -344px !important;
+  }
+}
+.d_change_state_2 {
+  background: url(../assets/playbar.png) no-repeat -69px -344px !important;
+  &:hover {
+    background: url(../assets/playbar.png) no-repeat -96px -344px !important;
+  }
+}
+.d_change_state_3 {
+  background: url(../assets/playbar.png) no-repeat -69px -249px !important;
+  &:hover {
+    background: url(../assets/playbar.png) no-repeat -96px -249px !important;
+  }
+}
 .highlighted {
   color: red;
   font-weight: bold;
@@ -508,10 +558,16 @@ export default {
   background: url(../assets/playbar.png) repeat-x 226px -401px !important; //开锁
 }
 .isPlayingClass {
-  background: url("../assets/playbar.png") no-repeat -42px -166px !important; //暂停图标
+  background: url("../assets/playbar.png") no-repeat -2px -166px !important; //暂停
+  &:hover {
+    background: url("../assets/playbar.png") no-repeat -42px -166px !important; //暂停图标
+  }
 }
 .isPauseClass {
-  background: url("../assets/playbar.png") no-repeat -42px -205px !important; //播放按钮图标
+  background: url("../assets/playbar.png") no-repeat -2px -205px !important; //播放按钮
+  &:hover {
+    background: url("../assets/playbar.png") no-repeat -42px -205px !important; //播放按钮图标
+  }
 }
 
 .C_Play {
@@ -660,6 +716,7 @@ export default {
           left: -6px;
           background-color: #303030;
           display: none;
+          z-index: 3;
           .ant-slider-vertical {
             height: 90%;
           }
@@ -894,14 +951,13 @@ export default {
               overflow: auto;
               color: #8c8c8c;
               font-size: 12px;
-              transition: all 0.3s;
               .play_info_lyric_content {
                 height: 260px;
                 height: 32px;
                 line-height: 32px;
                 padding: 0 20px;
                 text-align: center;
-                transition: all 0.3s;
+                transition: scroll-behavior 0.5s ease; /* 添加过渡效果 */
               }
             }
           }

@@ -8,10 +8,8 @@ export default new Vuex.Store({
     x_songsList: [], //搜索的歌曲数组对象
     x_playListIndex: "", //当前播放的歌曲uid
     x_isPlaying: false, //是否正在播放
-
   },
   mutations: {
-
     // 添加歌曲到播放数组
     m_setItems(state, newItems) {
       // 根据uid 进行去重
@@ -53,7 +51,11 @@ export default new Vuex.Store({
       state.x_playListIndex = "-1";
       state.x_isPlaying = false;
       // 清空本地存储
-      localStorage.clear();
+      // localStorage.clear();
+      // 重置本地存储
+      localStorage.setItem("l_songsList", JSON.stringify(state.x_songsList));
+      localStorage.setItem("l_playListIndex", state.x_playListIndex);
+      localStorage.setItem("l_isPlaying", state.x_isPlaying);
     },
     // vuex数据保存到本地
     m_setSongsListLocal(state) {
