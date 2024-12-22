@@ -250,10 +250,12 @@ export default {
 
 <style lang="less" scoped>
 #Home {
-  position: relative;
-  padding-bottom: 85px;
+  @media (max-width: 768px) {
+    .nav {
+      width: 1200px !important;
+    }
+  }
   .nav {
-    // width: 1200px;
     width: 100%;
     height: 250px;
     background: url("../assets/bg_search.png") no-repeat;

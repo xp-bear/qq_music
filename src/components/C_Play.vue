@@ -1,100 +1,103 @@
 <template>
   <div class="C_Play" ref="play_detail">
-    <div class="box" :class="[{ animationYup: isMove == 1 }, { animationYdown: isMove == 2 }]">
-      <!-- 右上角关闭角标 -->
-      <span class="tag" @click="close_play" :class="[{ isLock: isMove == 2 }]"></span>
-      <div class="tag_bg"></div>
-      <!-- 内容主体 -->
-      <div class="content">
-        <!-- 按钮图标 -->
-        <div class="btns">
-          <div @click="previous_song"></div>
-          <div title="ctrl+空格 播放" @click="paly_music" :class="x_isPlaying ? 'isPlayingClass' : 'isPauseClass'"></div>
-          <div @click="next_song"></div>
-        </div>
-        <!-- 播放信息 -->
-        <div class="play_info">
-          <div class="play_img">
-            <img :src="d_play_music_info ? d_play_music_info.data.cover : 'https://xp-cdn-oss.oss-cn-wuhan-lr.aliyuncs.com/cookies/default_album.jpg'" alt="" />
+    <!-- pc端 -->
+    <div class="pc-box">
+      <div class="box" :class="[{ animationYup: isMove == 1 }, { animationYdown: isMove == 2 }]">
+        <!-- 右上角关闭角标 -->
+        <span class="tag" @click="close_play" :class="[{ isLock: isMove == 2 }]"></span>
+        <div class="tag_bg"></div>
+        <!-- 内容主体 -->
+        <div class="content">
+          <!-- 按钮图标 -->
+          <div class="btns">
+            <div @click="previous_song"></div>
+            <div title="ctrl+空格 播放" @click="paly_music" :class="x_isPlaying ? 'isPlayingClass' : 'isPauseClass'"></div>
+            <div @click="next_song"></div>
           </div>
-          <div class="play_name">
-            <div class="play_name_info">
-              <span @click="paly_list" style="user-select: none">{{ d_play_music_info ? d_play_music_info.data.title : "" }}</span>
-              <span>{{ d_play_music_info ? d_play_music_info.data.singer : "" }}</span>
+          <!-- 播放信息 -->
+          <div class="play_info">
+            <div class="play_img">
+              <img :src="d_play_music_info ? d_play_music_info.data.cover : 'https://xp-cdn-oss.oss-cn-wuhan-lr.aliyuncs.com/cookies/default_album.jpg'" alt="" />
             </div>
-            <!-- 进度条 -->
-            <div class="progress_bar" ref="progressBar" @click="handleProgressBarClick">
-              <div class="progressing" ref="progressing">
-                <!-- 进度条图标 -->
-                <div class="progressing_icon"></div>
+            <div class="play_name">
+              <div class="play_name_info">
+                <span @click="paly_list" style="user-select: none">{{ d_play_music_info ? d_play_music_info.data.title : "" }}</span>
+                <span>{{ d_play_music_info ? d_play_music_info.data.singer : "" }}</span>
+              </div>
+              <!-- 进度条 -->
+              <div class="progress_bar" ref="progressBar" @click="handleProgressBarClick">
+                <div class="progressing" ref="progressing">
+                  <!-- 进度条图标 -->
+                  <div class="progressing_icon"></div>
+                </div>
               </div>
             </div>
-          </div>
-          <!-- 播放信息显示 -->
-          <div class="play_music_info">
-            <span>{{ formattedCurrentTime }}</span>
-            <span>&nbsp;/&nbsp;</span>
-            <span>{{ d_play_music_info ? d_play_music_info.duration : "00:00" }}</span>
-          </div>
-        </div>
-        <div style="display: flex">
-          <!-- 声音相关信息 -->
-          <div class="music_info" :class="playVolume == 0 ? 'music_info_mute' : ''" @click="show_music" ref="music_content">
-            <div class="music_content" :style="{ display: isShowVolume ? 'block' : 'none' }" @click.stop>
-              <a-slider vertical v-model="playVolume" />
+            <!-- 播放信息显示 -->
+            <div class="play_music_info">
+              <span>{{ formattedCurrentTime }}</span>
+              <span>&nbsp;/&nbsp;</span>
+              <span>{{ d_play_music_info ? d_play_music_info.duration : "00:00" }}</span>
             </div>
           </div>
-          <!-- 播放音乐的状态切换 -->
-          <div class="play_state" @click="change_play_state" :class="d_change_state" :title="isPlayState == 1 ? '循环' : isPlayState == 2 ? '单曲循环' : '随机'">
-            <div class="play_state_info" ref="play_state_info"></div>
-          </div>
-          <!-- 播放列表 右边 -->
-          <div class="paly_list" @click="paly_list">
-            <span class="paly_list_1">{{ x_songsList.length }}</span>
-            <div class="play_detail" v-show="playDetailState" @click.stop>
-              <div class="play_left">
-                <div class="play_left_title">
-                  <h4>播放列表({{ x_songsList.length }})</h4>
-                  <div class="play_delete" @click="clear_play_list">
-                    <span></span>
-                    <span>清除</span>
+          <div style="display: flex">
+            <!-- 声音相关信息 -->
+            <div class="music_info" :class="playVolume == 0 ? 'music_info_mute' : ''" @click="show_music" ref="music_content">
+              <div class="music_content" :style="{ display: isShowVolume ? 'block' : 'none' }" @click.stop>
+                <a-slider vertical v-model="playVolume" />
+              </div>
+            </div>
+            <!-- 播放音乐的状态切换 -->
+            <div class="play_state" @click="change_play_state" :class="d_change_state" :title="isPlayState == 1 ? '循环' : isPlayState == 2 ? '单曲循环' : '随机'">
+              <div class="play_state_info" ref="play_state_info"></div>
+            </div>
+            <!-- 播放列表 右边 -->
+            <div class="paly_list" @click="paly_list">
+              <span class="paly_list_1">{{ x_songsList.length }}</span>
+              <div class="play_detail" v-show="playDetailState" @click.stop>
+                <div class="play_left">
+                  <div class="play_left_title">
+                    <h4>播放列表({{ x_songsList.length }})</h4>
+                    <div class="play_delete" @click="clear_play_list">
+                      <span></span>
+                      <span>清除</span>
+                    </div>
                   </div>
-                </div>
-                <!-- 播放列表主体区域 -->
-                <div class="play_list_content play_list_bar">
-                  <div class="play_list_item" :class="item.data.link == x_playListIndex ? 'play_list_bg' : ''" v-for="(item, index) in x_songsList" :key="index" @click="changePlayInfo(item.uid)">
-                    <div class="play_list_item_info">
-                      <div class="py_title">
-                        <div class="py_tit_info">
-                          <span :style="item.data.link == x_playListIndex ? 'background: url(' + isCurPlayingImg + ') no-repeat -182px 0' : ''"></span>
-                          <span class="py_tit_info_2">{{ item.data.title }}</span>
+                  <!-- 播放列表主体区域 -->
+                  <div class="play_list_content play_list_bar">
+                    <div class="play_list_item" :class="item.data.link == x_playListIndex ? 'play_list_bg' : ''" v-for="(item, index) in x_songsList" :key="index" @click="changePlayInfo(item.uid)">
+                      <div class="play_list_item_info">
+                        <div class="py_title">
+                          <div class="py_tit_info">
+                            <span :style="item.data.link == x_playListIndex ? 'background: url(' + isCurPlayingImg + ') no-repeat -182px 0' : ''"></span>
+                            <span class="py_tit_info_2">{{ item.data.title }}</span>
+                          </div>
+                          <!-- 操作按钮 -->
+                          <div class="py_btns">
+                            <span class="py_btns_1" title="下载" @click="download_play_info($event, item)" style="margin-right: 20px"> </span>
+                            <span class="py_btns_1" title="删除" @click="delete_play_info($event, item.uid)"></span>
+                          </div>
                         </div>
-                        <!-- 操作按钮 -->
-                        <div class="py_btns">
-                          <span class="py_btns_1" title="下载" @click="download_play_info($event, item)" style="margin-right: 20px"> </span>
-                          <span class="py_btns_1" title="删除" @click="delete_play_info($event, item.uid)"></span>
+                        <div class="py_name">
+                          <span class="py_name_1">{{ item.data.singer }}</span>
+                          <span class="py_name_2">{{ item.duration }}</span>
                         </div>
-                      </div>
-                      <div class="py_name">
-                        <span class="py_name_1">{{ item.data.singer }}</span>
-                        <span class="py_name_2">{{ item.duration }}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div class="play_right">
-                <!-- 歌曲标题 -->
-                <div class="play_info_title">
-                  <div class="play_info_title_1">
-                    {{ d_play_music_info ? d_play_music_info.sign_name : "" }}
-                    <span class="play_info_title_2" @click="toClosePlayList"> </span>
+                <div class="play_right">
+                  <!-- 歌曲标题 -->
+                  <div class="play_info_title">
+                    <div class="play_info_title_1">
+                      {{ d_play_music_info ? d_play_music_info.sign_name : "" }}
+                      <span class="play_info_title_2" @click="toClosePlayList"> </span>
+                    </div>
                   </div>
-                </div>
-                <!-- 歌词区域 -->
-                <div class="play_info_lyric play_list_bar" ref="lyricsContainer">
-                  <div class="play_info_lyric_content">
-                    <div v-for="(line, index) in parsedLyrics" :key="index" :class="{ highlighted: currentLineIndex == index }" ref="lyricLines">{{ line.text }}</div>
+                  <!-- 歌词区域 -->
+                  <div class="play_info_lyric play_list_bar" ref="lyricsContainer">
+                    <div class="play_info_lyric_content">
+                      <div v-for="(line, index) in parsedLyrics" :key="index" :class="{ highlighted: currentLineIndex == index }" ref="lyricLines">{{ line.text }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -102,8 +105,19 @@
           </div>
         </div>
       </div>
+      <div class="unfold" @mouseover="hover_unfold"></div>
     </div>
-    <div class="unfold" @mouseover="hover_unfold"></div>
+
+    <!-- 移动端 -->
+    <div class="m-box">
+      <div class="btns">
+        <div @click="previous_song"></div>
+        <div title="ctrl+空格 播放" @click="paly_music" :class="x_isPlaying ? 'isPlayingClass' : 'isPauseClass'"></div>
+        <div @click="next_song"></div>
+      </div>
+    </div>
+    <!-- 按钮图标 -->
+
     <!-- 播放音乐 -->
     <audio :src="d_play_music" :loop="isPlayState == 2 ? true : false" ref="audioElement"></audio>
   </div>
@@ -572,6 +586,57 @@ export default {
 
 .C_Play {
   position: relative;
+  // 媒体查询
+  @media (max-width: 768px) {
+    .pc-box {
+      display: none;
+    }
+    .m-box {
+      bottom: 0px !important;
+    }
+  }
+
+  // 移动端
+  .m-box {
+    position: fixed;
+    height: 60px;
+    width: 100vw;
+    background-color: #2e2d2d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: -70px;
+    .btns {
+      display: flex;
+      align-items: center;
+      div {
+        width: 28px;
+        height: 28px;
+        margin-right: 8px;
+        background: url("../assets/playbar.png") no-repeat -2px -130px;
+        &:hover {
+          background: url("../assets/playbar.png") no-repeat -32px -130px;
+        }
+        &:nth-child(2) {
+          width: 36px;
+          height: 36px;
+          background-color: #85ffbd;
+          background: url("../assets/playbar.png") no-repeat -2px -205px;
+          &:hover {
+            background: url("../assets/playbar.png") no-repeat -42px -205px;
+          }
+        }
+        &:nth-child(3) {
+          background: url("../assets/playbar.png") no-repeat -82px -131px;
+          &:hover {
+            background: url("../assets/playbar.png") no-repeat -112px -131px;
+          }
+        }
+      }
+    }
+  }
+
+  // pc端
   .box {
     position: fixed;
     bottom: -55px;
