@@ -165,7 +165,7 @@ export default {
     this.m_setIsPlaying(false);
 
     // 初始的默认音量应该是50。
-    this.$refs.audioElement.volume = this.playVolume / 100;
+    // this.$refs.audioElement.volume = this.playVolume / 100;
   },
   beforeDestroy() {
     // 清除定时器

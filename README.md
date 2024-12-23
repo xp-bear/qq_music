@@ -20,13 +20,11 @@
 - **API服务**：Spotify API, iTunes API 等
 - **部署**：Docker 和 Kubernetes
 
-## 如何参与
+## 项目截图
 
-如果你对音乐充满热情并想要为这个项目贡献力量，请查看 [贡献指南](./CONTRIBUTING.md)。
+![image-20241223224038771](https://xp-cdn-oss.oss-cn-wuhan-lr.aliyuncs.com/typora/image-20241223224038771.png)
 
-## 联系我们
-
-有任何问题或建议？请随时通过 [Issues页面]([https://github.com/your-repo](https://github.com/xp-bear/issues) 提出，或者加入我们的 [Discord群组](#) 讨论。
+![image-20241223224047574](https://xp-cdn-oss.oss-cn-wuhan-lr.aliyuncs.com/typora/image-20241223224047574.png)
 
 ---
 
