@@ -78,7 +78,7 @@ export default {
   watch: {
     // 监听输入框最新的值
     keyword(newVal, oldVal) {
-      this.keyword = newVal.trim();
+      this.keyword = newVal;
       if (newVal == "") {
         this.songsList = [];
       }
@@ -184,8 +184,10 @@ export default {
     },
     //获取播放链接
     toPlay(uid, id) {
+      // 根据uid获取播放对象的索引
+      let index = this.songsList.findIndex((item) => item.uid === uid);
       // 保存索引到vuex中
-      this.m_setItems(this.songsList[id - 1]);
+      this.m_setItems(this.songsList[index]);
       this.m_setPlayListIndex(uid);
       this.m_setIsPlaying(true);
     },
