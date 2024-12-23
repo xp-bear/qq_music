@@ -1,19 +1,33 @@
-# qq_music
+# 熊鸣曲库 - 在线音乐平台
 
-## Project setup
-```
-npm install
-```
+## 项目简介
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+欢迎来到 **熊鸣曲库**！受QQ音乐启发，我们致力于创建一个开放源代码的音乐生态系统，让每个人都能享受高品质音乐、发现新声音，并与其他音乐爱好者分享心情。
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## 核心功能
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- **海量曲库**：汇聚世界各地的音乐。
+- **个性化推荐**：根据用户的收听习惯提供独一无二的音乐推荐。
+- **社交互动**：评论、点赞和分享，创建并分享个人歌单。
+- **高清音质**：多种音频格式支持，确保最佳音质体验。
+- **多端同步**：播放记录、收藏和设置实时同步。
+
+## 技术栈
+
+- **前端**：React.js
+- **后端**：Node.js 和 Express
+- **数据库**：MongoDB
+- **API服务**：Spotify API, iTunes API 等
+- **部署**：Docker 和 Kubernetes
+
+## 如何参与
+
+如果你对音乐充满热情并想要为这个项目贡献力量，请查看 [贡献指南](./CONTRIBUTING.md)。
+
+## 联系我们
+
+有任何问题或建议？请随时通过 [Issues页面]([https://github.com/your-repo](https://github.com/xp-bear/issues) 提出，或者加入我们的 [Discord群组](#) 讨论。
+
+---
+
+让我们一起用代码谱写音乐的新篇章！
