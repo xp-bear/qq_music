@@ -10,9 +10,9 @@
         <div class="content">
           <!-- 按钮图标 -->
           <div class="btns">
-            <div @click="previous_song"></div>
+            <div title="← 上一首" @click="previous_song"></div>
             <div title="ctrl+空格 播放" @click="paly_music" :class="x_isPlaying ? 'isPlayingClass' : 'isPauseClass'"></div>
-            <div @click="next_song"></div>
+            <div title="→ 下一首" @click="next_song"></div>
           </div>
           <!-- 播放信息 -->
           <div class="play_info">
@@ -349,16 +349,20 @@ export default {
     },
     // 监听空格播放状态
     handleSpaceKey(event) {
+      // 按 / 键打开播放列表
+      if (event.code == "NumpadDivide") {
+        this.paly_list();
+      }
       // 播放音乐 ctrl + 空格
       if (event.code === "Space" && event.ctrlKey) {
         this.paly_music();
       }
       // 上一首歌曲 ctrl + 方向左
-      if (event.code === "ArrowLeft" && event.ctrlKey) {
+      if (event.code === "ArrowLeft") {
         this.previous_song();
       }
       // 下一首歌曲 ctrl + 方向右
-      if (event.code === "ArrowRight" && event.ctrlKey) {
+      if (event.code === "ArrowRight") {
         this.next_song();
       }
     },
