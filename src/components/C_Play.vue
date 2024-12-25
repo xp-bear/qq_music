@@ -408,12 +408,17 @@ export default {
         let curPlayIndex = this.x_songsList.findIndex((item) => item.uid === this.x_playListIndex);
         // 判断到了最后一首歌曲
         if (curPlayIndex === this.x_songsList.length - 1) {
-          return this.$message.info("当前已经是最后一首歌曲", 1);
+          // return this.$message.info("当前已经是最后一首歌曲", 1);
+          // 播放第一首歌曲
+
+          this.m_setPlayListIndex(this.x_songsList[0].uid);
+          this.m_setIsPlaying(true); //播放
+          return;
         }
         this.m_setPlayListIndex(this.x_songsList[curPlayIndex + 1].uid);
         this.m_setIsPlaying(true);
-      } else if (this.isPlayState == 3 && this.currentTime >= this.durationTime) {
-        // 随机播放
+      }
+      if (this.isPlayState == 3 && this.currentTime >= this.durationTime) {
         let randomIndex = Math.floor(Math.random() * this.x_songsList.length);
         this.m_setPlayListIndex(this.x_songsList[randomIndex].uid);
         this.m_setIsPlaying(true);
