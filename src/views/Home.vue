@@ -55,17 +55,19 @@ export default {
     this.hot_search();
   },
   created() {
-    this.debouncedSearchValue = debounce(this.searchValue, 500); // 500ns防抖
+    this.debouncedSearchValue = debounce(this.searchValue, 500); // 500ms防抖
   },
   mounted() {
-    this.$refs.search_input.focus();
+    // this.$refs.search_input.focus(); //自动聚焦
   },
   data() {
     return {
       hot_key: [
-        { n: 1, k: "周杰伦" },
-        { n: 2, k: "薛之谦" },
-        { n: 3, k: "许嵩" },
+        { n: 1, k: "林俊杰" },
+        { n: 2, k: "圣诞节" },
+        { n: 3, k: "苹果香" },
+        { n: 4, k: "天亮以前说再见" },
+        { n: 5, k: "爱错" },
       ], //热门搜索关键字
       keyword: "", //用户搜索关键字
       songsList: [], //歌曲搜索列表
@@ -204,8 +206,10 @@ export default {
     },
     // 添加到播放列表
     addPlayList(uid, id) {
+      // 根据uid获取播放对象的索引
+      let index = this.songsList.findIndex((item) => item.uid === uid);
       // 保存索引到vuex中
-      this.m_setItems(this.songsList[id - 1]);
+      this.m_setItems(this.songsList[index]);
       this.$message.success("已添加到播放列表", 1);
     },
     // 根据提供的音乐URL获取音频的总时长
