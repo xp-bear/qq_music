@@ -20,6 +20,9 @@ importers:
       core-js:
         specifier: ^3.6.5
         version: 3.39.0
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       reset-css:
         specifier: ^5.0.1
         version: 5.0.2

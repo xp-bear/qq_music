@@ -21,8 +21,8 @@
             </div>
             <div class="play_name">
               <div class="play_name_info">
-                <span @click="paly_list" style="user-select: none">{{ d_play_music_info ? d_play_music_info.data.title : "" }}</span>
-                <span>{{ d_play_music_info ? d_play_music_info.data.singer : "" }}</span>
+                <span @click="paly_list" style="user-select: none">{{ d_play_music_info ? d_play_music_info.data.song_name : "" }}</span>
+                <span>{{ d_play_music_info ? d_play_music_info.data.song_singer : "" }}</span>
               </div>
               <!-- 进度条 -->
               <div class="progress_bar" ref="progressBar" @click="handleProgressBarClick">
@@ -69,7 +69,7 @@
                         <div class="py_title">
                           <div class="py_tit_info">
                             <span :style="item.data.link == x_playListIndex ? 'background: url(' + isCurPlayingImg + ') no-repeat -182px 0' : ''"></span>
-                            <span class="py_tit_info_2">{{ item.data.title }}</span>
+                            <span class="py_tit_info_2">{{ item.data.song_name }}</span>
                           </div>
                           <!-- 操作按钮 -->
                           <div class="py_btns">
@@ -78,7 +78,7 @@
                           </div>
                         </div>
                         <div class="py_name">
-                          <span class="py_name_1">{{ item.data.singer }}</span>
+                          <span class="py_name_1">{{ item.data.song_singer }}</span>
                           <span class="py_name_2">{{ item.duration }}</span>
                         </div>
                       </div>
@@ -194,13 +194,13 @@ export default {
     // 解析歌词
     parsedLyrics() {
       // 假设歌词格式为 [时间] 歌词
-      return this.lyrics.split("\n").map((line) => {
+      return this.lyrics.split("\\n").map((line, index) => {
         const match = line.match(/\[(\d+):(\d+)\.(\d+)\](.*)/);
         if (match) {
           const minutes = parseInt(match[1], 10);
           const seconds = parseInt(match[2], 10);
           const milliseconds = parseInt(match[3], 10);
-          const time = minutes * 60 + seconds + milliseconds / 1000; // 偏移一下歌词显示，因为不是当前音乐的接口。
+          const time = minutes * 60 + seconds + milliseconds / 1000;
           return { time, text: match[4] };
         }
         return { time: 9999, text: line };
@@ -307,8 +307,10 @@ export default {
     // 请求歌词
     async fetchLyrics() {
       try {
-        const response = await this.$axios.get(this.lrc_url);
-        this.lyrics = response.data.data.lrc;
+        // const response = await this.$axios.get(this.lrc_url);
+        const index = this.x_songsList.findIndex((item) => item.uid == this.x_playListIndex);
+
+        this.lyrics = this.x_songsList[index].data.lyric;
       } catch (error) {
         this.lyrics = "[00:00.00] 暂无歌词";
       }

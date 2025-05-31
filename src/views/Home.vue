@@ -112,9 +112,8 @@ export default {
       try {
         this.isLoading = true; //开始加载
         // 初始请求获取行数据
-        const response = await this.$axios.get(`?msg=${this.keyword}&type=json&br=2`);
+        const response = await this.$axios.get(`https://www.hhlqilongzhu.cn/api/dg_QQmusicflac.php?msg=${this.keyword}&type=text`);
         let lines = response.data.split("\n");
-        lines.pop(); // 删除最后一个元素
 
         // 创建保存结果的数组
         let resultPromises = [];
@@ -122,19 +121,19 @@ export default {
         // 遍历每一行数据并解析
         lines.forEach((line, index) => {
           // 每一行按照 "--" 分割成两部分
-          let parts = line.split(" -- ");
+          let parts = line.split("、");
 
           // 提取歌曲名（去掉前面的编号和点）
-          let signName = parts[0].split(".").slice(1).join(".").trim();
+          let signName = parts[1].split("--")[0].trim();
           // 歌手名
-          let signer = parts[1]?.trim();
+          let signer = parts[1].split("--")[1].trim();
 
           // 构造对象并加入到结果数组中
           resultPromises.push(
             (async () => {
               let obj = {};
               // 请求歌曲数据
-              const result = await this.$axios.get(`?msg=${this.keyword}&type=json&br=2&n=${index + 1}`);
+              const result = await this.$axios.get(`https://www.hhlqilongzhu.cn/api/dg_QQmusicflac.php?msg=${this.keyword}&type=json&n=${index + 1}`);
               obj.data = result.data.data;
               obj.id = index + 1;
               obj.sign_name = signName;
@@ -314,6 +313,7 @@ export default {
   .content {
     width: 1200px;
     margin: 0 auto;
+    padding-bottom: 110px;
     .title {
       display: flex;
       justify-content: center;
