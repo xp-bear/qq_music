@@ -293,9 +293,11 @@ export default {
           }
 
           // 请求歌词
-          let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
-          sign_name = sign_name.split("(")[0];
-          this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+          // let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
+          // sign_name = sign_name.split("(")[0];
+          // this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+          const index = this.x_songsList.findIndex((item) => item.uid == this.x_playListIndex);
+          this.lyrics = this.x_songsList[index].data.lyric;
         } else {
           this.x_songsList.splice(index, 1); //删除当前歌曲
         }
@@ -309,7 +311,6 @@ export default {
       try {
         // const response = await this.$axios.get(this.lrc_url);
         const index = this.x_songsList.findIndex((item) => item.uid == this.x_playListIndex);
-
         this.lyrics = this.x_songsList[index].data.lyric;
       } catch (error) {
         this.lyrics = "[00:00.00] 暂无歌词";
@@ -321,9 +322,11 @@ export default {
       this.m_setPlayListIndex(uid);
       this.m_setIsPlaying(true);
       // 请求歌词
-      let sign_name = this.x_songsList.find((item) => item.uid === uid).sign_name;
-      sign_name = sign_name.split("(")[0];
-      this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+      // let sign_name = this.x_songsList.find((item) => item.uid === uid).sign_name;
+      // sign_name = sign_name.split("(")[0];
+      // this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+      const index = this.x_songsList.findIndex((item) => item.uid == this.x_playListIndex);
+      this.lyrics = this.x_songsList[index].data.lyric;
     },
     // 点击播放列表 右下角的播放列表。
     paly_list() {
@@ -335,9 +338,11 @@ export default {
           return;
         }
         // 请求歌词
-        let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
-        sign_name = sign_name.split("(")[0];
-        this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+        // let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
+        // sign_name = sign_name.split("(")[0];
+        // this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+        const index = this.x_songsList.findIndex((item) => item.uid == this.x_playListIndex);
+        this.lyrics = this.x_songsList[index].data.lyric;
       }
     },
     // 全局点击事件
@@ -374,7 +379,7 @@ export default {
       const container = this.$refs.lyricsContainer;
       const lines = this.$refs.lyricLines;
 
-      const currentLine = lines[this.currentLineIndex];
+      const currentLine = lines[this.currentLineIndex - 1];
 
       if (currentLine) {
         const containerHeight = container.clientHeight;
@@ -417,11 +422,13 @@ export default {
           this.m_setIsPlaying(true); //播放
           return;
         }
+        this.lyrics = this.x_songsList[curPlayIndex + 1].data.lyric;
         this.m_setPlayListIndex(this.x_songsList[curPlayIndex + 1].uid);
         this.m_setIsPlaying(true);
       }
       if (this.isPlayState == 3 && this.currentTime >= this.durationTime) {
         let randomIndex = Math.floor(Math.random() * this.x_songsList.length);
+        this.lyrics = this.x_songsList[randomIndex].data.lyric;
         this.m_setPlayListIndex(this.x_songsList[randomIndex].uid);
         this.m_setIsPlaying(true);
       }
@@ -471,9 +478,11 @@ export default {
       this.m_setIsPlaying(true);
 
       // 请求歌词
-      let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
-      sign_name = sign_name.split("(")[0];
-      this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+      // let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
+      // sign_name = sign_name.split("(")[0];
+      // this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+      const index = this.x_songsList.findIndex((item) => item.uid == this.x_playListIndex);
+      this.lyrics = this.x_songsList[index].data.lyric;
     },
     // 下一首歌曲
     next_song() {
@@ -488,9 +497,11 @@ export default {
       this.m_setIsPlaying(true);
 
       // 请求歌词
-      let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
-      sign_name = sign_name.split("(")[0];
-      this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+      // let sign_name = this.x_songsList.find((item) => item.uid === this.x_playListIndex).sign_name;
+      // sign_name = sign_name.split("(")[0];
+      // this.lrc_url = `https://api.cenguigui.cn/api/douyin/music/?msg=${sign_name}&page=1&limit=1&type=json&n=1`;
+      const index = this.x_songsList.findIndex((item) => item.uid == this.x_playListIndex);
+      this.lyrics = this.x_songsList[index].data.lyric;
     },
     // 播放音乐
     paly_music() {
